@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 
 const sampleMedicines = [
   {
-    id: 'm1111111-1111-1111-1111-111111111111',
+    id: 'c1111111-1111-1111-1111-111111111111',
     name: 'Paracetamol 500mg',
     generic_name: 'Paracetamol / Acetaminophen',
     category: 'Analgesic',
@@ -14,7 +14,7 @@ const sampleMedicines = [
     verification_status: 'VERIFIED',
   },
   {
-    id: 'm2222222-2222-2222-2222-222222222222',
+    id: 'c2222222-2222-2222-2222-222222222222',
     name: 'Amoxicillin 500mg Capsules',
     generic_name: 'Amoxicillin Trihydrate',
     category: 'Antibiotics',
@@ -26,7 +26,7 @@ const sampleMedicines = [
     verification_status: 'VERIFIED',
   },
   {
-    id: 'm3333333-3333-3333-3333-333333333333',
+    id: 'c3333333-3333-3333-3333-333333333333',
     name: 'Metformin 850mg Tablets',
     generic_name: 'Metformin Hydrochloride',
     category: 'Diabetes Care',
@@ -38,7 +38,7 @@ const sampleMedicines = [
     verification_status: 'VERIFIED',
   },
   {
-    id: 'm4444444-4444-4444-4444-444444444444',
+    id: 'c4444444-4444-4444-4444-444444444444',
     name: 'Atorvastatin 20mg Tablets',
     generic_name: 'Atorvastatin Calcium',
     category: 'Cardiology',
@@ -50,7 +50,7 @@ const sampleMedicines = [
     verification_status: 'VERIFIED',
   },
   {
-    id: 'm5555555-5555-5555-5555-555555555555',
+    id: 'c5555555-5555-5555-5555-555555555555',
     name: 'Cetirizine 10mg Allergy Relief',
     generic_name: 'Cetirizine Hydrochloride',
     category: 'Allergy',
