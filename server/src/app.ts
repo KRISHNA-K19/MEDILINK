@@ -33,6 +33,25 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root Welcome Endpoint
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    name: 'MediLink REST API',
+    version: '1.0.0',
+    status: 'active',
+    tagline: 'Find. Reserve. Collect.',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth/*',
+      medicines: '/api/medicines/*',
+      patient: '/api/patient/*',
+      pharmacy: '/api/pharmacy/*',
+      admin: '/api/admin/*',
+    },
+    repository: 'https://github.com/KRISHNA-K19/MEDILINK.git',
+  });
+});
+
 // API Route Registration
 app.use('/api', healthRoutes);
 app.use('/api', authRoutes);
