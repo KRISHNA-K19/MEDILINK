@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ReservationStatusBadge } from '@/components/ui/badges';
 import { EmptyState, LoadingState } from '@/components/ui/states';
 import { BookmarkCheck, Clock, ArrowRight, XCircle } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const PatientReservationsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -54,16 +55,11 @@ export const PatientReservationsPage: React.FC = () => {
   const fetchReservations = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/patient/reservations?status=${filter}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && Array.isArray(data.data)) {
-          setReservations(data.data);
-          setIsLoading(false);
-          return;
-        }
+      const data = await apiFetch(`/api/patient/reservations?status=${filter}`);
+      if (data.success && Array.isArray(data.data)) {
+        setReservations(data.data);
+        setIsLoading(false);
+        return;
       }
     } catch (e) {}
 

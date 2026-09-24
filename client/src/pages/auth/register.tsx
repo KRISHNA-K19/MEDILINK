@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Cross, AlertCircle, Building2, User } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -61,17 +62,10 @@ export const RegisterPage: React.FC = () => {
         }),
       };
 
-      const response = await fetch('/api/auth/register', {
+      const result = await apiFetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Registration failed.');
-      }
 
       // Save token and user details
       if (result.data?.session?.access_token) {

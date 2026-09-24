@@ -7,6 +7,7 @@ import { AvailabilityBadge } from '@/components/ui/badges';
 import { Modal } from '@/components/ui/modal';
 import { EmptyState, LoadingState } from '@/components/ui/states';
 import { Pill, Plus, Edit2, Trash2, ShieldAlert } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const PharmacyInventoryPage: React.FC = () => {
   const [verificationStatus] = useState<'VERIFIED' | 'PENDING'>('VERIFIED');
@@ -62,16 +63,11 @@ export const PharmacyInventoryPage: React.FC = () => {
   const fetchInventory = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/pharmacy/medicines', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && Array.isArray(data.data)) {
-          setMedicines(data.data);
-          setIsLoading(false);
-          return;
-        }
+      const data = await apiFetch('/api/pharmacy/medicines');
+      if (data.success && Array.isArray(data.data)) {
+        setMedicines(data.data);
+        setIsLoading(false);
+        return;
       }
     } catch (e) {}
     setMedicines(sampleInventory);

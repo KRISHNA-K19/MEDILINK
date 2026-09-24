@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badges';
 import { Modal } from '@/components/ui/modal';
 import { Users, ShieldAlert, CheckCircle2, UserCheck, UserX, AlertTriangle } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const AdminUsersPage: React.FC = () => {
   const [filter, setFilter] = useState('ALL');
@@ -73,9 +74,8 @@ export const AdminUsersPage: React.FC = () => {
     const nextStatus = selectedUser.account_status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
 
     try {
-      await fetch(`/api/admin/users/${selectedUser.id}/${nextStatus.toLowerCase()}`, {
+      await apiFetch(`/api/admin/users/${selectedUser.id}/${nextStatus.toLowerCase()}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}` },
       });
     } catch (e) {}
 

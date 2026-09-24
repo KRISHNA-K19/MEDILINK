@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Cross, Lock, Mail, AlertCircle } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,17 +26,10 @@ export const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const result = await apiFetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Login failed. Please check credentials.');
-      }
 
       // Save token and user role
       if (result.data?.session?.access_token) {

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AvailabilityBadge, VerificationBadge } from '@/components/ui/badges';
 import { FileUploader } from '@/components/ui/file-uploader';
 import { ArrowLeft, ArrowRight, CheckCircle2, Building2, Pill, FileText, AlertCircle, Clock } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const ReservationWizardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,13 +42,10 @@ export const ReservationWizardPage: React.FC = () => {
 
   const fetchMedicineDetails = async () => {
     try {
-      const res = await fetch(`/api/medicines/${initialMedicineId}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.data) {
-          setSelectedMedicine(data.data);
-          return;
-        }
+      const data = await apiFetch(`/api/medicines/${initialMedicineId}`);
+      if (data.success && data.data) {
+        setSelectedMedicine(data.data);
+        return;
       }
     } catch (e) {}
     setSelectedMedicine(sampleMedicine);
@@ -100,19 +98,10 @@ export const ReservationWizardPage: React.FC = () => {
         formData.append('prescription', prescriptionFile);
       }
 
-      const res = await fetch('/api/patient/reservations', {
+      const result = await apiFetch('/api/patient/reservations', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}`,
-        },
         body: formData,
       });
-
-      const result = await res.json();
-
-      if (!res.ok || !result.success) {
-        throw new Error(result.message || 'Failed to submit reservation.');
-      }
 
       setCreatedReservation(result.data);
       setStep(5);

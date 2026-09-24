@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ReservationStatusBadge } from '@/components/ui/badges';
 import { Modal } from '@/components/ui/modal';
 import { ArrowLeft, CheckCircle2, XCircle, FileText, User, ShieldCheck, Eye } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const PharmacyReservationDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,15 +39,10 @@ export const PharmacyReservationDetailsPage: React.FC = () => {
 
   const fetchDetails = async () => {
     try {
-      const res = await fetch(`/api/pharmacy/reservations/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.data) {
-          setReservation(data.data);
-          return;
-        }
+      const data = await apiFetch(`/api/pharmacy/reservations/${id}`);
+      if (data.success && data.data) {
+        setReservation(data.data);
+        return;
       }
     } catch (e) {}
     setReservation(sampleReservation);
@@ -55,9 +51,8 @@ export const PharmacyReservationDetailsPage: React.FC = () => {
   const handleApprove = async () => {
     setIsProcessing(true);
     try {
-      await fetch(`/api/pharmacy/reservations/${id}/approve`, {
+      await apiFetch(`/api/pharmacy/reservations/${id}/approve`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}` },
       });
     } catch (e) {}
     setReservation((prev: any) => ({ ...prev, status: 'APPROVED' }));
@@ -67,12 +62,8 @@ export const PharmacyReservationDetailsPage: React.FC = () => {
   const handleReject = async () => {
     setIsProcessing(true);
     try {
-      await fetch(`/api/pharmacy/reservations/${id}/reject`, {
+      await apiFetch(`/api/pharmacy/reservations/${id}/reject`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}`,
-        },
         body: JSON.stringify({ reason: rejectionReason }),
       });
     } catch (e) {}

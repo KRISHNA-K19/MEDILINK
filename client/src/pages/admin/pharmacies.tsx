@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { VerificationBadge } from '@/components/ui/badges';
 import { Modal } from '@/components/ui/modal';
 import { ShieldCheck, ShieldAlert, CheckCircle2, XCircle, FileText, AlertCircle } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const AdminPharmaciesPage: React.FC = () => {
   const [filter, setFilter] = useState('ALL');
@@ -65,16 +66,11 @@ export const AdminPharmaciesPage: React.FC = () => {
   const fetchPharmacies = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/admin/pharmacies?status=${filter}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && Array.isArray(data.data)) {
-          setPharmacies(data.data);
-          setIsLoading(false);
-          return;
-        }
+      const data = await apiFetch(`/api/admin/pharmacies?status=${filter}`);
+      if (data.success && Array.isArray(data.data)) {
+        setPharmacies(data.data);
+        setIsLoading(false);
+        return;
       }
     } catch (e) {}
 
@@ -96,12 +92,8 @@ export const AdminPharmaciesPage: React.FC = () => {
 
     const targetEndpoint = actionType.toLowerCase(); // verify, reject, revoke
     try {
-      await fetch(`/api/admin/pharmacies/${selectedPharmacy.id}/${targetEndpoint}`, {
+      await apiFetch(`/api/admin/pharmacies/${selectedPharmacy.id}/${targetEndpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}`,
-        },
         body: JSON.stringify({ notes: actionNotes }),
       });
     } catch (e) {}

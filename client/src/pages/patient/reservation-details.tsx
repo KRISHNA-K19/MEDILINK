@@ -7,6 +7,7 @@ import { ReservationStatusBadge } from '@/components/ui/badges';
 import { Timeline, TimelineStep } from '@/components/ui/timeline';
 import { ConfirmationDialog } from '@/components/ui/modal';
 import { ArrowLeft, Building2, Clock, XCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const PatientReservationDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,15 +39,10 @@ export const PatientReservationDetailsPage: React.FC = () => {
 
   const fetchDetails = async () => {
     try {
-      const res = await fetch(`/api/patient/reservations/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.data) {
-          setReservation(data.data);
-          return;
-        }
+      const data = await apiFetch(`/api/patient/reservations/${id}`);
+      if (data.success && data.data) {
+        setReservation(data.data);
+        return;
       }
     } catch (e) {}
     setReservation(sampleReservation);
@@ -55,13 +51,10 @@ export const PatientReservationDetailsPage: React.FC = () => {
   const handleCancelReservation = async () => {
     setIsCancelling(true);
     try {
-      const res = await fetch(`/api/patient/reservations/${id}/cancel`, {
+      await apiFetch(`/api/patient/reservations/${id}/cancel`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('medilink_token') || ''}` },
       });
-      if (res.ok) {
-        setReservation((prev: any) => ({ ...prev, status: 'CANCELLED' }));
-      }
+      setReservation((prev: any) => ({ ...prev, status: 'CANCELLED' }));
     } catch (e) {}
     setReservation((prev: any) => ({ ...prev, status: 'CANCELLED' }));
     setIsCancelling(false);

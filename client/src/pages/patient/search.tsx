@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { AvailabilityBadge, VerificationBadge } from '@/components/ui/badges';
 import { EmptyState, LoadingState } from '@/components/ui/states';
 import { Building2, Pill, ShieldCheck, FileText, ArrowRight } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export const PatientSearchPage: React.FC = () => {
   const navigate = useNavigate();
@@ -98,14 +99,11 @@ export const PatientSearchPage: React.FC = () => {
       if (prescriptionFilter) params.set('prescription', 'true');
       if (categoryFilter !== 'All') params.set('category', categoryFilter);
 
-      const res = await fetch(`/api/medicines/search?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && Array.isArray(data.data)) {
-          setMedicines(data.data);
-          setIsLoading(false);
-          return;
-        }
+      const data = await apiFetch(`/api/medicines/search?${params.toString()}`);
+      if (data.success && Array.isArray(data.data)) {
+        setMedicines(data.data);
+        setIsLoading(false);
+        return;
       }
     } catch (e) {}
 
