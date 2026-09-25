@@ -11,6 +11,7 @@ import { RegisterPage } from '@/pages/auth/register';
 // Patient Pages
 import { PatientDashboard } from '@/pages/patient/dashboard';
 import { PatientSearchPage } from '@/pages/patient/search';
+import { PatientMedicineDetailsPage } from '@/pages/patient/medicine-details';
 import { ReservationWizardPage } from '@/pages/patient/reserve-wizard';
 import { PatientReservationsPage } from '@/pages/patient/reservations';
 import { PatientReservationDetailsPage } from '@/pages/patient/reservation-details';
@@ -51,6 +52,8 @@ export const AppRouter: React.FC = () => {
         {/* Patient Routes */}
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="/patient/search" element={<PatientSearchPage />} />
+        <Route path="/patient/medicine/:id" element={<PatientMedicineDetailsPage />} />
+        <Route path="/patient/medicines/:id" element={<PatientMedicineDetailsPage />} />
         <Route path="/patient/reserve" element={<ReservationWizardPage />} />
         <Route path="/patient/reservations" element={<PatientReservationsPage />} />
         <Route path="/patient/reservations/:id" element={<PatientReservationDetailsPage />} />
