@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AvailabilityBadge, VerificationBadge } from '@/components/ui/badges';
 import { EmptyState, LoadingState } from '@/components/ui/states';
-import { Building2, Pill, ShieldCheck, FileText, ArrowRight } from 'lucide-react';
+import { PharmacyMap } from '@/components/ui/pharmacy-map';
+import { Building2, Pill, ShieldCheck, FileText, ArrowRight, Map, List, Truck } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 
 export const PatientSearchPage: React.FC = () => {
@@ -14,6 +15,7 @@ export const PatientSearchPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
 
+  const [viewMode, setViewMode] = useState<'LIST' | 'MAP'>('LIST');
   const [query, setQuery] = useState(initialQuery);
   const [availabilityFilter, setAvailabilityFilter] = useState('ALL');
   const [prescriptionFilter, setPrescriptionFilter] = useState(false);
@@ -132,9 +134,35 @@ export const PatientSearchPage: React.FC = () => {
   return (
     <DashboardLayout role="PATIENT">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-extrabold text-medilink-navy font-heading">Search Medicines</h1>
-          <p className="text-xs text-medilink-muted">Find medicines available at verified local pharmacies</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-extrabold text-medilink-navy font-heading">Search Medicines & Pharmacies</h1>
+            <p className="text-xs text-medilink-muted">Discover stock at verified local pharmacies via List or Interactive Map</p>
+          </div>
+
+          {/* View Mode Switcher */}
+          <div className="flex items-center gap-1 p-1 bg-medilink-surface rounded-xl border border-medilink-border self-start">
+            <button
+              type="button"
+              onClick={() => setViewMode('LIST')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === 'LIST' ? 'bg-white text-medilink-navy shadow-xs border border-medilink-border' : 'text-medilink-muted'
+              }`}
+            >
+              <List className="w-3.5 h-3.5 text-medilink-teal" />
+              <span>Medicine Cards</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('MAP')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === 'MAP' ? 'bg-white text-medilink-navy shadow-xs border border-medilink-border' : 'text-medilink-muted'
+              }`}
+            >
+              <Map className="w-3.5 h-3.5 text-medilink-teal" />
+              <span>Pharmacy Map</span>
+            </button>
+          </div>
         </div>
 
         {/* Search Input Bar */}
@@ -150,8 +178,21 @@ export const PatientSearchPage: React.FC = () => {
           onCategoryChange={setCategoryFilter}
         />
 
-        {/* Search Results */}
-        {isLoading ? (
+        {/* Interactive Map View */}
+        {viewMode === 'MAP' ? (
+          <div className="space-y-3">
+            <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl text-xs text-medilink-teal flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Map className="w-4 h-4 flex-shrink-0" />
+                <span>Showing verified local pharmacies with qualitative stock status. Click any pin to view details and reserve.</span>
+              </div>
+              <span className="font-bold flex items-center gap-1">
+                <Truck className="w-3.5 h-3.5" /> 1-3 Hour Express Delivery Available
+              </span>
+            </div>
+            <PharmacyMap />
+          </div>
+        ) : isLoading ? (
           <LoadingState message="Searching verified pharmacy network..." />
         ) : medicines.length === 0 ? (
           <EmptyState

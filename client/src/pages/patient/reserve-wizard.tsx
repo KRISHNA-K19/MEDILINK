@@ -12,10 +12,15 @@ export const ReservationWizardPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialMedicineId = searchParams.get('medicineId') || 'm1111111-1111-1111-1111-111111111111';
+  const initialMode = searchParams.get('mode') === 'EXPRESS_DELIVERY' ? 'EXPRESS_DELIVERY' : 'PICKUP';
 
   const [step, setStep] = useState(1);
+  const [fulfillmentMode, setFulfillmentMode] = useState<'PICKUP' | 'EXPRESS_DELIVERY'>(initialMode);
+  const [deliveryAddress, setDeliveryAddress] = useState('104 Healthcare Boulevard, Apt 4B');
+  const [deliveryPhone, setDeliveryPhone] = useState('+1-800-555-0199');
   const [selectedMedicine, setSelectedMedicine] = useState<any>(null);
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
+  const [extractedOcrData, setExtractedOcrData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [createdReservation, setCreatedReservation] = useState<any>(null);
@@ -201,11 +206,11 @@ export const ReservationWizardPage: React.FC = () => {
           </Card>
         )}
 
-        {/* STEP 2: Confirm Medicine */}
+        {/* STEP 2: Confirm Medicine & Fulfillment Method */}
         {step === 2 && (
-          <Card className="p-6 space-y-4">
+          <Card className="p-6 space-y-5">
             <h3 className="text-lg font-bold text-medilink-navy font-heading border-b border-medilink-border pb-3">
-              Step 2: Confirm Medicine & Stock Signal
+              Step 2: Confirm Medicine & Select Fulfillment Method
             </h3>
             <div className="p-4 bg-medilink-surface rounded-xl border border-medilink-border space-y-3">
               <div className="flex justify-between items-start">
@@ -219,7 +224,74 @@ export const ReservationWizardPage: React.FC = () => {
               {selectedMedicine.requires_prescription && (
                 <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-semibold flex items-center gap-2">
                   <FileText className="w-4 h-4 text-amber-600" />
-                  <span>This medicine requires a valid prescription upload in Step 3.</span>
+                  <span>This medicine requires a verified medical prescription upload in Step 3.</span>
+                </div>
+              )}
+            </div>
+
+            {/* Fulfillment Options Selector */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-medilink-text uppercase tracking-wider">
+                Select Fulfillment Method
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div
+                  onClick={() => setFulfillmentMode('PICKUP')}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    fulfillmentMode === 'PICKUP'
+                      ? 'border-medilink-teal bg-teal-50/40 ring-2 ring-medilink-teal/20'
+                      : 'border-medilink-border hover:border-slate-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-bold text-xs text-medilink-navy mb-1">
+                    <Clock className="w-4 h-4 text-medilink-teal" />
+                    <span>Store Pickup (15 Mins)</span>
+                  </div>
+                  <p className="text-[11px] text-medilink-muted">
+                    Hold stock at pharmacy for 15 minutes. Pick up in person at zero delivery charge.
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => setFulfillmentMode('EXPRESS_DELIVERY')}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    fulfillmentMode === 'EXPRESS_DELIVERY'
+                      ? 'border-sky-600 bg-sky-50/50 ring-2 ring-sky-500/20'
+                      : 'border-medilink-border hover:border-slate-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-bold text-xs text-sky-950 mb-1">
+                    <Clock className="w-4 h-4 text-sky-700" />
+                    <span>Express Delivery (1-3 Hours)</span>
+                  </div>
+                  <p className="text-[11px] text-medilink-muted">
+                    Verified courier delivers directly to your door within 1 to 3 hours.
+                  </p>
+                </div>
+              </div>
+
+              {fulfillmentMode === 'EXPRESS_DELIVERY' && (
+                <div className="pt-3 space-y-3 animate-in fade-in duration-200">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-medilink-navy">Delivery Address</label>
+                    <input
+                      type="text"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-lg border border-medilink-border focus:ring-1 focus:ring-medilink-teal"
+                      placeholder="Street address, Apartment / Suite"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-medilink-navy">Contact Phone</label>
+                    <input
+                      type="text"
+                      value={deliveryPhone}
+                      onChange={(e) => setDeliveryPhone(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-lg border border-medilink-border focus:ring-1 focus:ring-medilink-teal"
+                      placeholder="+1 (800) 555-0199"
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -236,18 +308,23 @@ export const ReservationWizardPage: React.FC = () => {
           </Card>
         )}
 
-        {/* STEP 3: Prescription Upload */}
+        {/* STEP 3: Prescription Upload & Security Inspection */}
         {step === 3 && (
           <Card className="p-6 space-y-4">
             <h3 className="text-lg font-bold text-medilink-navy font-heading border-b border-medilink-border pb-3">
-              Step 3: Upload Prescription Document
+              Step 3: Upload Prescription & AI Inspection
             </h3>
 
             <p className="text-xs text-medilink-muted leading-relaxed">
-              Upload your doctor's prescription. Documents are stored in private cloud storage and viewed exclusively by the fulfilling pharmacy.
+              Upload your doctor's prescription. Documents are inspected by our Medical Security Engine to verify Rx authenticity and extract doctor & dosage details.
             </p>
 
-            <FileUploader onFileSelect={setPrescriptionFile} />
+            <FileUploader
+              onFileSelect={(file, extractedData) => {
+                setPrescriptionFile(file);
+                setExtractedOcrData(extractedData);
+              }}
+            />
 
             <div className="flex justify-between pt-4">
               <Button variant="outline" onClick={handlePrevStep}>
@@ -282,14 +359,32 @@ export const ReservationWizardPage: React.FC = () => {
                 <span className="font-medium text-medilink-navy">{selectedMedicine.address}, {selectedMedicine.city}</span>
               </div>
               <div className="pt-2 flex justify-between">
-                <span className="text-medilink-muted">Prescription Status:</span>
+                <span className="text-medilink-muted">Fulfillment Mode:</span>
+                <span className="font-bold text-sky-800">
+                  {fulfillmentMode === 'EXPRESS_DELIVERY' ? '🚚 Express Delivery (1-3 Hours)' : '🏪 Store Pickup (15 Mins)'}
+                </span>
+              </div>
+              {fulfillmentMode === 'EXPRESS_DELIVERY' && (
+                <div className="pt-2 flex justify-between">
+                  <span className="text-medilink-muted">Delivery Address:</span>
+                  <span className="font-semibold text-medilink-navy">{deliveryAddress}</span>
+                </div>
+              )}
+              <div className="pt-2 flex justify-between">
+                <span className="text-medilink-muted">Prescription Security Audit:</span>
                 <span className="font-bold text-emerald-700">
-                  {selectedMedicine.requires_prescription ? 'Attached & Ready' : 'Not Required'}
+                  {selectedMedicine.requires_prescription
+                    ? extractedOcrData?.securityStatus === 'PASSED'
+                      ? '✓ Security Audit Passed (Rx Authenticated)'
+                      : 'Attached & Pending Pharmacy Inspection'
+                    : 'Not Required'}
                 </span>
               </div>
               <div className="pt-2 flex justify-between">
-                <span className="text-medilink-muted">Hold Duration:</span>
-                <span className="font-bold text-medilink-teal">24 Hours upon pharmacy approval</span>
+                <span className="text-medilink-muted">Estimated Fulfilling Window:</span>
+                <span className="font-bold text-medilink-teal">
+                  {fulfillmentMode === 'EXPRESS_DELIVERY' ? 'Guaranteed 1 to 3 Hours' : '15-Minute Guaranteed Store Hold'}
+                </span>
               </div>
             </div>
 
