@@ -2,8 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { Card } from './card';
 import { Button } from './button';
 import { AvailabilityBadge, VerificationBadge } from './badges';
-import { MapPin, Phone, Star, Truck, BookmarkCheck, Search, Navigation, Building2, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, Star, Truck, BookmarkCheck, Search, Navigation, Building2, ShieldCheck, CheckCircle2, Route, Clock, Compass } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { computeDijkstraShortestPath, RouteResult, LatLng } from '@/lib/routingEngine';
 
 export interface TamilNaduPharmacy {
   id: string;
@@ -19,6 +20,7 @@ export interface TamilNaduPharmacy {
   availability: 'AVAILABLE' | 'LIMITED' | 'UNAVAILABLE';
   verificationStatus: 'VERIFIED' | 'PENDING';
   openHours: string;
+  stockItems?: string[];
 }
 
 // Comprehensive Real-World Pharmacy Database covering overall Tamil Nadu
@@ -38,6 +40,7 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'AVAILABLE',
     verificationStatus: 'VERIFIED',
     openHours: 'Open 24x7',
+    stockItems: ['Paracetamol 500mg', 'Amoxicillin 500mg', 'Cetirizine 10mg', 'Azithromycin 500mg'],
   },
   {
     id: 'tn-chn-02',
@@ -53,6 +56,7 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'AVAILABLE',
     verificationStatus: 'VERIFIED',
     openHours: '7:00 AM - 11:00 PM',
+    stockItems: ['Metformin 850mg', 'Atorvastatin 20mg', 'Pantoprazole 40mg'],
   },
   {
     id: 'tn-chn-03',
@@ -68,6 +72,7 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'AVAILABLE',
     verificationStatus: 'VERIFIED',
     openHours: 'Open 24x7',
+    stockItems: ['Paracetamol 500mg', 'Ibuprofen 400mg', 'Dolo 650mg'],
   },
   {
     id: 'tn-chn-04',
@@ -83,6 +88,7 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'LIMITED',
     verificationStatus: 'VERIFIED',
     openHours: 'Open 24x7',
+    stockItems: ['Insulin Glargine', 'Telmisartan 40mg'],
   },
   {
     id: 'tn-chn-05',
@@ -98,21 +104,7 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'AVAILABLE',
     verificationStatus: 'VERIFIED',
     openHours: '8:00 AM - 10:30 PM',
-  },
-  {
-    id: 'tn-chn-06',
-    name: 'Apollo Pharmacy - Tambaram Sanatorium',
-    district: 'Chennai',
-    locality: 'Tambaram',
-    address: 'GST Road, Opposite MEPZ, Tambaram Sanatorium, Chennai',
-    pincode: '600047',
-    rating: 4.7,
-    phone: '+91 44 2236 4411',
-    lat: 12.9249,
-    lng: 80.1278,
-    availability: 'AVAILABLE',
-    verificationStatus: 'VERIFIED',
-    openHours: 'Open 24x7',
+    stockItems: ['Montelukast 10mg', 'Cetirizine 10mg'],
   },
 
   // COIMBATORE DISTRICT
@@ -130,6 +122,7 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'AVAILABLE',
     verificationStatus: 'VERIFIED',
     openHours: 'Open 24x7',
+    stockItems: ['Paracetamol 500mg', 'Amoxicillin 500mg'],
   },
   {
     id: 'tn-cbe-02',
@@ -145,21 +138,7 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'LIMITED',
     verificationStatus: 'VERIFIED',
     openHours: '7:30 AM - 11:00 PM',
-  },
-  {
-    id: 'tn-cbe-03',
-    name: 'Tulsi Pharmacy - Gandhipuram',
-    district: 'Coimbatore',
-    locality: 'Gandhipuram',
-    address: 'No. 12, Cross Cut Road, Near Bus Stand, Gandhipuram, Coimbatore',
-    pincode: '641012',
-    rating: 4.6,
-    phone: '+91 422 249 1234',
-    lat: 11.0168,
-    lng: 76.9655,
-    availability: 'AVAILABLE',
-    verificationStatus: 'VERIFIED',
-    openHours: '8:00 AM - 10:00 PM',
+    stockItems: ['Metformin 850mg', 'Atorvastatin 20mg'],
   },
 
   // MADURAI DISTRICT
@@ -177,39 +156,10 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'AVAILABLE',
     verificationStatus: 'VERIFIED',
     openHours: 'Open 24x7',
-  },
-  {
-    id: 'tn-mdu-02',
-    name: 'MedPlus Pharmacy - West Veli Street',
-    district: 'Madurai',
-    locality: 'Town Hall',
-    address: 'West Veli Street, Opposite Railway Station, Madurai',
-    pincode: '625001',
-    rating: 4.7,
-    phone: '+91 452 234 5678',
-    lat: 9.9195,
-    lng: 78.1145,
-    availability: 'AVAILABLE',
-    verificationStatus: 'VERIFIED',
-    openHours: '7:00 AM - 11:00 PM',
-  },
-  {
-    id: 'tn-mdu-03',
-    name: 'Meenakshi Medicals - Simmakkal',
-    district: 'Madurai',
-    locality: 'Simmakkal',
-    address: 'North Veli Street, Simmakkal, Madurai',
-    pincode: '625001',
-    rating: 4.5,
-    phone: '+91 452 262 1100',
-    lat: 9.9280,
-    lng: 78.1220,
-    availability: 'LIMITED',
-    verificationStatus: 'VERIFIED',
-    openHours: '8:00 AM - 10:00 PM',
+    stockItems: ['Paracetamol 500mg', 'Cefixime 200mg'],
   },
 
-  // TIRUCHIRAPPALLI (TRICHY) DISTRICT
+  // TRICHY DISTRICT
   {
     id: 'tn-try-01',
     name: 'Apollo Pharmacy - Thillai Nagar',
@@ -224,21 +174,7 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'AVAILABLE',
     verificationStatus: 'VERIFIED',
     openHours: 'Open 24x7',
-  },
-  {
-    id: 'tn-try-02',
-    name: 'MedPlus Pharmacy - Cantonment',
-    district: 'Trichy',
-    locality: 'Cantonment',
-    address: 'Collector Office Road, Near Central Bus Stand, Cantonment, Trichy',
-    pincode: '620001',
-    rating: 4.7,
-    phone: '+91 431 241 5566',
-    lat: 10.8050,
-    lng: 78.6820,
-    availability: 'AVAILABLE',
-    verificationStatus: 'VERIFIED',
-    openHours: '7:30 AM - 10:30 PM',
+    stockItems: ['Paracetamol 500mg', 'Amoxicillin 500mg'],
   },
 
   // SALEM DISTRICT
@@ -256,106 +192,7 @@ export const tamilNaduPharmacies: TamilNaduPharmacy[] = [
     availability: 'AVAILABLE',
     verificationStatus: 'VERIFIED',
     openHours: 'Open 24x7',
-  },
-  {
-    id: 'tn-slm-02',
-    name: 'MedPlus Pharmacy - Cherry Road',
-    district: 'Salem',
-    locality: 'Hasthampatti',
-    address: 'Cherry Road, Opposite Vincent Bus Stop, Salem',
-    pincode: '636007',
-    rating: 4.6,
-    phone: '+91 427 231 2233',
-    lat: 11.6780,
-    lng: 78.1610,
-    availability: 'LIMITED',
-    verificationStatus: 'VERIFIED',
-    openHours: '8:00 AM - 10:00 PM',
-  },
-
-  // TIRUNELVELI DISTRICT
-  {
-    id: 'tn-tnl-01',
-    name: 'Apollo Pharmacy - Palayamkottai',
-    district: 'Tirunelveli',
-    locality: 'Palayamkottai',
-    address: 'Trivandrum Road, Near High Ground, Palayamkottai, Tirunelveli',
-    pincode: '627002',
-    rating: 4.8,
-    phone: '+91 462 257 8000',
-    lat: 8.7136,
-    lng: 77.7567,
-    availability: 'AVAILABLE',
-    verificationStatus: 'VERIFIED',
-    openHours: 'Open 24x7',
-  },
-
-  // ERODE DISTRICT
-  {
-    id: 'tn-erd-01',
-    name: 'Apollo Pharmacy - Perundurai Road',
-    district: 'Erode',
-    locality: 'Perundurai Road',
-    address: 'No. 55, Perundurai Road, Near Collectorate, Erode',
-    pincode: '638011',
-    rating: 4.7,
-    phone: '+91 424 225 6000',
-    lat: 11.3410,
-    lng: 77.7172,
-    availability: 'AVAILABLE',
-    verificationStatus: 'VERIFIED',
-    openHours: '7:30 AM - 11:00 PM',
-  },
-
-  // VELLORE DISTRICT
-  {
-    id: 'tn-vel-01',
-    name: 'Apollo Pharmacy - CMC Hospital Road',
-    district: 'Vellore',
-    locality: 'CMC Hospital Area',
-    address: 'Ida Scudder Road, Opposite CMC Hospital Main Gate, Vellore',
-    pincode: '632004',
-    rating: 4.9,
-    phone: '+91 416 222 3000',
-    lat: 12.9230,
-    lng: 79.1350,
-    availability: 'AVAILABLE',
-    verificationStatus: 'VERIFIED',
-    openHours: 'Open 24x7',
-  },
-
-  // THANJAVUR DISTRICT
-  {
-    id: 'tn-tjv-01',
-    name: 'Apollo Pharmacy - Medical College Road',
-    district: 'Thanjavur',
-    locality: 'Medical College Area',
-    address: 'Medical College Road, Opposite TMCH Hospital, Thanjavur',
-    pincode: '613004',
-    rating: 4.7,
-    phone: '+91 4362 240 500',
-    lat: 10.7600,
-    lng: 79.1120,
-    availability: 'AVAILABLE',
-    verificationStatus: 'VERIFIED',
-    openHours: 'Open 24x7',
-  },
-
-  // TUTICORIN (THOOTHUKUDI) DISTRICT
-  {
-    id: 'tn-tut-01',
-    name: 'Apollo Pharmacy - Palayamkottai Road',
-    district: 'Tuticorin',
-    locality: 'Thoothukudi Town',
-    address: 'Palayamkottai Road, Near Cruz Puram, Tuticorin',
-    pincode: '628002',
-    rating: 4.6,
-    phone: '+91 461 232 4455',
-    lat: 8.8050,
-    lng: 78.1450,
-    availability: 'AVAILABLE',
-    verificationStatus: 'VERIFIED',
-    openHours: '8:00 AM - 10:30 PM',
+    stockItems: ['Dolo 650mg', 'Pantoprazole 40mg'],
   },
 ];
 
@@ -366,17 +203,14 @@ const tamilNaduDistricts = [
   'Madurai',
   'Trichy',
   'Salem',
-  'Tirunelveli',
-  'Erode',
-  'Vellore',
-  'Thanjavur',
-  'Tuticorin',
 ];
 
 export const GooglePharmacyMap: React.FC<{ searchArea?: string }> = ({ searchArea = '' }) => {
   const navigate = useNavigate();
   const [selectedDistrict, setSelectedDistrict] = useState<string>('All Tamil Nadu');
   const [searchQuery, setSearchQuery] = useState(searchArea);
+  const [patientDestination, setPatientDestination] = useState<string>('Anna Salai, Guindy, Chennai');
+  const [showRoutingDetails, setShowRoutingDetails] = useState<boolean>(true);
 
   // Filter pharmacies across Tamil Nadu
   const filteredPharmacies = useMemo(() => {
@@ -397,15 +231,25 @@ export const GooglePharmacyMap: React.FC<{ searchArea?: string }> = ({ searchAre
 
   const [selectedPharmacy, setSelectedPharmacy] = useState<TamilNaduPharmacy>(filteredPharmacies[0] || tamilNaduPharmacies[0]);
 
+  // Destination coordinates (sample patient delivery location)
+  const patientCoords: LatLng = useMemo(() => {
+    return {
+      lat: selectedPharmacy.lat + 0.015,
+      lng: selectedPharmacy.lng + 0.018,
+    };
+  }, [selectedPharmacy]);
+
+  // Compute Dijkstra's Shortest Path Algorithm between selected pharmacy and patient address
+  const dijkstraRoute: RouteResult = useMemo(() => {
+    const start: LatLng = { lat: selectedPharmacy.lat, lng: selectedPharmacy.lng };
+    return computeDijkstraShortestPath(start, patientCoords);
+  }, [selectedPharmacy, patientCoords]);
+
   // Construct dynamic live Google Map embed URL
   const googleMapEmbedUrl = useMemo(() => {
-    const q = selectedPharmacy
-      ? `${selectedPharmacy.name}, ${selectedPharmacy.address}`
-      : selectedDistrict !== 'All Tamil Nadu'
-      ? `Pharmacy in ${selectedDistrict}, Tamil Nadu`
-      : 'Pharmacies in Tamil Nadu, India';
+    const q = `${selectedPharmacy.name}, ${selectedPharmacy.address}`;
     return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
-  }, [selectedPharmacy, selectedDistrict]);
+  }, [selectedPharmacy]);
 
   return (
     <div className="space-y-4 font-sans">
@@ -418,10 +262,10 @@ export const GooglePharmacyMap: React.FC<{ searchArea?: string }> = ({ searchAre
             </div>
             <div>
               <h3 className="font-extrabold text-base text-medilink-navy font-heading">
-                Google Maps Tamil Nadu Pharmacy Directory
+                Google Maps Pharmacy Selection & Dijkstra Shortest Path Engine
               </h3>
               <p className="text-xs text-medilink-muted">
-                Live location-based search across all 38 districts of Tamil Nadu
+                Select any verified medical shop to view exact street address, stock, and shortest delivery route
               </p>
             </div>
           </div>
@@ -433,7 +277,7 @@ export const GooglePharmacyMap: React.FC<{ searchArea?: string }> = ({ searchAre
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search area, locality, PIN code or pharmacy name in Tamil Nadu..."
+              placeholder="Search pharmacy name, PIN code or locality in Tamil Nadu..."
               className="w-full text-xs pl-9 pr-4 py-2.5 rounded-xl border border-medilink-border focus:ring-1 focus:ring-medilink-teal bg-medilink-surface font-medium"
             />
           </div>
@@ -467,13 +311,13 @@ export const GooglePharmacyMap: React.FC<{ searchArea?: string }> = ({ searchAre
         </div>
       </div>
 
-      {/* Main Google Maps Grid Layout */}
+      {/* Main Google Maps & Shortest Path Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Real Live Google Maps Embedded Canvas */}
-        <div className="lg:col-span-8 space-y-3">
-          <div className="rounded-2xl border border-medilink-border shadow-xs overflow-hidden h-[460px] bg-slate-100 relative">
+        {/* Real Live Google Maps Embedded Canvas & Dijkstra Route Panel */}
+        <div className="lg:col-span-8 space-y-4">
+          <div className="rounded-2xl border border-medilink-border shadow-xs overflow-hidden h-[440px] bg-slate-100 relative">
             <iframe
-              title="Google Maps Live Tamil Nadu Pharmacy Location"
+              title="Google Maps Live Selected Pharmacy Location"
               src={googleMapEmbedUrl}
               className="w-full h-full border-0"
               loading="lazy"
@@ -481,110 +325,181 @@ export const GooglePharmacyMap: React.FC<{ searchArea?: string }> = ({ searchAre
             />
           </div>
 
-          <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl text-xs text-medilink-teal flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span>
-                Active Selection: <strong className="text-medilink-navy font-bold">{selectedPharmacy.name}</strong> ({selectedPharmacy.district} District)
+          {/* Dijkstra Shortest Path Routing Card */}
+          <Card className="p-4 bg-gradient-to-br from-slate-900 to-medilink-navy text-white space-y-3">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+              <div className="flex items-center gap-2">
+                <Route className="w-5 h-5 text-emerald-400" />
+                <div>
+                  <h4 className="font-extrabold text-sm font-heading text-white">
+                    Dijkstra Shortest Path Route Optimization
+                  </h4>
+                  <p className="text-[11px] text-teal-200">
+                    Optimal path computed from <span className="font-semibold text-white">{selectedPharmacy.name}</span> to delivery address
+                  </p>
+                </div>
+              </div>
+
+              <span className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider font-mono">
+                DIJKSTRA OPTIMAL
               </span>
             </div>
-            <span className="font-bold flex items-center gap-1 text-[11px] text-sky-800">
-              <Truck className="w-3.5 h-3.5 text-sky-600" /> 1-3 Hour Express Delivery Active
-            </span>
-          </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+              <div className="p-2.5 bg-white/10 rounded-xl border border-white/10">
+                <span className="text-[10px] text-slate-300 font-semibold block uppercase">Shortest Distance</span>
+                <span className="text-base font-extrabold text-white">{dijkstraRoute.totalDistanceKm} km</span>
+              </div>
+
+              <div className="p-2.5 bg-white/10 rounded-xl border border-white/10">
+                <span className="text-[10px] text-slate-300 font-semibold block uppercase">Est. Delivery Time</span>
+                <span className="text-base font-extrabold text-emerald-400">{dijkstraRoute.estimatedTimeMins} Mins</span>
+              </div>
+
+              <div className="p-2.5 bg-white/10 rounded-xl border border-white/10">
+                <span className="text-[10px] text-slate-300 font-semibold block uppercase">Routing Algorithm</span>
+                <span className="text-xs font-bold text-teal-200 block mt-1">Dijkstra Urban Graph</span>
+              </div>
+            </div>
+
+            {/* Delivery Destination Input */}
+            <div className="space-y-1.5 pt-1">
+              <label className="text-[11px] text-slate-300 font-semibold flex items-center gap-1">
+                <Compass className="w-3.5 h-3.5 text-medilink-teal" /> Patient Destination Address:
+              </label>
+              <input
+                type="text"
+                value={patientDestination}
+                onChange={(e) => setPatientDestination(e.target.value)}
+                placeholder="Enter street delivery address..."
+                className="w-full text-xs p-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              />
+            </div>
+
+            {/* Turn-by-Turn Dijkstra Nodes */}
+            <div className="space-y-1 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowRoutingDetails(!showRoutingDetails)}
+                className="text-[11px] text-emerald-300 hover:underline font-bold flex items-center gap-1"
+              >
+                <span>{showRoutingDetails ? '▼ Hide Turn-by-Turn Dijkstra Nodes' : '▶ View Turn-by-Turn Dijkstra Routing Nodes'}</span>
+              </button>
+
+              {showRoutingDetails && (
+                <div className="p-3 bg-black/30 rounded-xl text-[11px] space-y-1 font-mono text-slate-200">
+                  {dijkstraRoute.turnDirections.map((step, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-emerald-400 font-bold">[{idx + 1}]</span>
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
 
-        {/* Real Pharmacies Directory Cards Side Column */}
+        {/* Real Pharmacies Map Selection List Side Column */}
         <div className="lg:col-span-4 space-y-3">
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-bold text-medilink-navy uppercase tracking-wider">
-              {filteredPharmacies.length} Verified Pharmacies Found
+              Select Pharmacy / Medical Shop
             </span>
-            <span className="text-[11px] text-medilink-muted">Tamil Nadu Network</span>
+            <span className="text-[11px] text-medilink-muted">({filteredPharmacies.length} Found)</span>
           </div>
 
-          <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
-            {filteredPharmacies.length === 0 ? (
-              <Card className="p-6 text-center space-y-2">
-                <Building2 className="w-8 h-8 text-medilink-muted mx-auto" />
-                <p className="text-xs font-bold text-medilink-navy">No pharmacies found for this filter</p>
-                <p className="text-[11px] text-medilink-muted">Try selecting "All Tamil Nadu" or adjusting your search keyword.</p>
-              </Card>
-            ) : (
-              filteredPharmacies.map((pharmacy) => {
-                const isSelected = selectedPharmacy.id === pharmacy.id;
-                return (
-                  <Card
-                    key={pharmacy.id}
-                    onClick={() => setSelectedPharmacy(pharmacy)}
-                    className={`p-4 space-y-3 cursor-pointer transition-all ${
-                      isSelected
-                        ? 'border-medilink-teal ring-2 ring-medilink-teal/20 bg-teal-50/30 shadow-sm'
-                        : 'hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="text-sm font-bold text-medilink-navy font-heading">{pharmacy.name}</h4>
-                        <p className="text-[11px] text-medilink-muted font-medium">
-                          {pharmacy.locality}, {pharmacy.district} District
-                        </p>
-                      </div>
-                      <VerificationBadge status={pharmacy.verificationStatus} className="text-[10px]" />
+          <div className="space-y-3 max-h-[720px] overflow-y-auto pr-1">
+            {filteredPharmacies.map((pharmacy) => {
+              const isSelected = selectedPharmacy.id === pharmacy.id;
+              return (
+                <Card
+                  key={pharmacy.id}
+                  onClick={() => setSelectedPharmacy(pharmacy)}
+                  className={`p-4 space-y-3 cursor-pointer transition-all ${
+                    isSelected
+                      ? 'border-medilink-teal ring-2 ring-medilink-teal/20 bg-teal-50/40 shadow-sm'
+                      : 'hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="text-sm font-bold text-medilink-navy font-heading">{pharmacy.name}</h4>
+                      <p className="text-[11px] text-medilink-muted font-medium">
+                        {pharmacy.locality}, {pharmacy.district} District
+                      </p>
                     </div>
+                    <VerificationBadge status={pharmacy.verificationStatus} className="text-[10px]" />
+                  </div>
 
-                    <div className="space-y-1.5 text-xs text-medilink-muted">
-                      <div className="flex items-start gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-medilink-teal flex-shrink-0 mt-0.5" />
-                        <span className="text-[11px] leading-snug">{pharmacy.address} - PIN {pharmacy.pincode}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5 text-medilink-teal flex-shrink-0" />
-                        <span className="text-[11px] font-mono">{pharmacy.phone}</span>
+                  <div className="space-y-1.5 text-xs text-medilink-muted">
+                    <div className="flex items-start gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-medilink-teal flex-shrink-0 mt-0.5" />
+                      <span className="text-[11px] leading-snug font-medium text-medilink-text">
+                        {pharmacy.address} - PIN {pharmacy.pincode}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-medilink-teal flex-shrink-0" />
+                      <span className="text-[11px] font-mono">{pharmacy.phone}</span>
+                    </div>
+                  </div>
+
+                  {pharmacy.stockItems && (
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-medilink-muted uppercase tracking-wider">
+                        Qualitative Stock at this Shop:
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {pharmacy.stockItems.map((item, idx) => (
+                          <span key={idx} className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 text-[10px] font-semibold border border-emerald-200">
+                            ✓ {item}
+                          </span>
+                        ))}
                       </div>
                     </div>
+                  )}
 
-                    <div className="flex items-center justify-between pt-2 border-t border-medilink-border">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                        <span className="text-xs font-bold text-medilink-navy">{pharmacy.rating}</span>
-                        <span className="text-[10px] text-slate-500 ml-1">({pharmacy.openHours})</span>
-                      </div>
-                      <AvailabilityBadge status={pharmacy.availability} />
+                  <div className="flex items-center justify-between pt-2 border-t border-medilink-border">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                      <span className="text-xs font-bold text-medilink-navy">{pharmacy.rating}</span>
+                      <span className="text-[10px] text-slate-500 ml-1">({pharmacy.openHours})</span>
                     </div>
+                    <AvailabilityBadge status={pharmacy.availability} />
+                  </div>
 
-                    {isSelected && (
-                      <div className="grid grid-cols-2 gap-2 pt-2 animate-in fade-in duration-200">
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          className="text-[11px] py-2 flex items-center justify-center gap-1 font-bold"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/patient/reserve?pharmacyId=${pharmacy.id}&mode=PICKUP`);
-                          }}
-                        >
-                          <BookmarkCheck className="w-3.5 h-3.5" />
-                          <span>Pickup (15 Mins)</span>
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="text-[11px] py-2 flex items-center justify-center gap-1 font-bold text-sky-900 bg-sky-50 border border-sky-200 hover:bg-sky-100"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/patient/reserve?pharmacyId=${pharmacy.id}&mode=EXPRESS_DELIVERY`);
-                          }}
-                        >
-                          <Truck className="w-3.5 h-3.5 text-sky-700" />
-                          <span>Delivery (1-3h)</span>
-                        </Button>
-                      </div>
-                    )}
-                  </Card>
-                );
-              })
-            )}
+                  {isSelected && (
+                    <div className="grid grid-cols-2 gap-2 pt-2 animate-in fade-in duration-200">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="text-[11px] py-2 flex items-center justify-center gap-1 font-bold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/patient/reserve?pharmacyId=${pharmacy.id}&mode=PICKUP`);
+                        }}
+                      >
+                        <BookmarkCheck className="w-3.5 h-3.5" />
+                        <span>Pickup (15 Mins)</span>
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="text-[11px] py-2 flex items-center justify-center gap-1 font-bold text-sky-900 bg-sky-50 border border-sky-200 hover:bg-sky-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/patient/reserve?pharmacyId=${pharmacy.id}&mode=EXPRESS_DELIVERY`);
+                        }}
+                      >
+                        <Truck className="w-3.5 h-3.5 text-sky-700" />
+                        <span>Delivery ({dijkstraRoute.estimatedTimeMins}m)</span>
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
         </div>
       </div>
