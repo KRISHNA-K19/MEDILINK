@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AvailabilityBadge, VerificationBadge } from '@/components/ui/badges';
 import { EmptyState, LoadingState } from '@/components/ui/states';
-import { PharmacyMap } from '@/components/ui/pharmacy-map';
+import { GooglePharmacyMap } from '@/components/ui/google-pharmacy-map';
 import { Building2, Pill, ShieldCheck, FileText, ArrowRight, Map, List, Truck } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 
@@ -184,13 +184,13 @@ export const PatientSearchPage: React.FC = () => {
             <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl text-xs text-medilink-teal flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Map className="w-4 h-4 flex-shrink-0" />
-                <span>Showing verified local pharmacies with qualitative stock status. Click any pin to view details and reserve.</span>
+                <span>Google Maps Live Geolocation: Displaying real pharmacies in the searched area.</span>
               </div>
               <span className="font-bold flex items-center gap-1">
                 <Truck className="w-3.5 h-3.5" /> 1-3 Hour Express Delivery Available
               </span>
             </div>
-            <PharmacyMap />
+            <GooglePharmacyMap searchArea={query || 'Chennai'} />
           </div>
         ) : isLoading ? (
           <LoadingState message="Searching verified pharmacy network..." />
