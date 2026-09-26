@@ -15,11 +15,22 @@ const app: Express = express();
 // Security HTTP headers
 app.use(helmet());
 
-// CORS configuration
-const allowedOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+// CORS configuration - Allow local dev, Vercel deployments, and configured CLIENT_ORIGIN
 app.use(
   cors({
-    origin: allowedOrigin,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const clientOrigin = process.env.CLIENT_ORIGIN;
+      if (
+        origin === 'http://localhost:5173' ||
+        origin === 'http://localhost:3000' ||
+        (clientOrigin && origin === clientOrigin) ||
+        origin.endsWith('.vercel.app')
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
